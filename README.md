@@ -7,4 +7,5 @@ When located in the main directory of the project, type  ```.venv\Scripts\activa
 ## Python packages to download
 1. [CLEASE](https://clease.readthedocs.io/en/stable/) (pip install clease)
 2. [SMOL](https://cedergrouphub.github.io/smol/) (pip install smol)
-3. [ASE](https://wiki.fysik.dtu.dk/ase/about.html) (pip install smol)
+3. [ASE](https://wiki.fysik.dtu.dk/ase/about.html) (pip install ase)
+4. [wandb](https://wandb.ai/site) (pip install wandb)

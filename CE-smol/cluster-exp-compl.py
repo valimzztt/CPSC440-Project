@@ -10,6 +10,21 @@ from monty.serialization import loadfn
 from ase.io import read
 from smol.cofe import ClusterSubspace
 
+# sci-kit learn for step 4.1
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error as mse
+import numpy as np
+import copy
+import warnings
+from sklearn.linear_model import Lasso
+from sklearn.exceptions import ConvergenceWarning
+
+
+import wandb
+wandb.login()
+from wandb.sklearn import plot_precision_recall, plot_feature_importances
+from wandb.sklearn import plot_class_proportions, plot_learning_curve, plot_roc
+
 """
     Scripts that demonstrate a more involved CLUSTER EXPANSION using SMOL
 """
@@ -33,7 +48,6 @@ atoms = read("MnNiAs.cif", format="cif")
 cutoffs = {2: 7, 3: 6, 4: 6}   # This is equal to CLEASE'S max_cluster_diameter =(7,6,6)  
 subspace = ClusterSubspace.from_cutoffs(prim, cutoffs=cutoffs)
 
-
 # 3. TRAINING SET: The json file contains the structures with their corresponding ground-state energies 
 energies_file = os.path.join(directory,"comp-struct-energy.json" )
 entries = loadfn(energies_file)
@@ -56,17 +70,17 @@ print ('Our feature matrix has the following dimensions:',
        wrangler.feature_matrix.shape)
 
 # 4.1 Fit a Cluster Expansion:
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error as mse
-import numpy as np
-import copy
-import warnings
-from sklearn.linear_model import Lasso
-from sklearn.exceptions import ConvergenceWarning
 
-TRIALS = 50
+TRIALS = 10
 TEST_SIZE = 0.20
 PROPERTY = 'energy'
+
+# (initialize wandb project and add hyperparameters)
+# NOTE: wandb API key: 966b532ea49a07fa69b9a1e34f47bc02865ea9ff
+wandb.init(project='ML for cluster expansion', config = {
+    "species" : species,
+    "cluster_info" : cutoffs,
+    "property" : PROPERTY})
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
@@ -74,7 +88,7 @@ with warnings.catch_warnings():
     all_rmse = []
     for alpha in np.logspace(-5, -3):
         rmse_list = []
-        for _ in range(TRIALS):
+        for trial in range(TRIALS):
             X_train, X_test, y_train, y_test = train_test_split(
                 wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
                 test_size=TEST_SIZE
@@ -90,8 +104,27 @@ with warnings.catch_warnings():
             y_predict = np.dot(X_test, wvec)
             rmse = np.sqrt(mse(y_test, y_predict))
             rmse_list.append(rmse)
+
+            # log to wandb
+            wandb.config.update({"test_size" : TEST_SIZE,
+                                "train_len" : len(X_train),
+                                "test_len" : len(X_test),
+                                })
+            wandb.log({f"rmse {alpha}" : rmse, f"y_predict {alpha}": y_predict, f"y_true {alpha}": y_test, "trial" : trial, "alpha" : alpha})
+           
+            
+            
+            # log additional visualisations to wandb
+            # plot_class_proportions(y_train, y_test)
+            # plot_learning_curve(model, X_train, y_train)
+            # # plot_roc(y_test, y_probas)
+            # # plot_precision_recall(y_test, y_probas)
+            # plot_feature_importances(model)
+        wandb.log({"test rmse": rmse_list})
+        
         all_rmse.append(np.mean(rmse_list))
 
+wandb.finish()
 
 # Load plotting tools to examine how the fitting is going
 import matplotlib as mpl
