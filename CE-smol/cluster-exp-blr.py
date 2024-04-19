@@ -16,7 +16,7 @@ from sklearn.metrics import mean_squared_error as mse
 import numpy as np
 import copy
 import warnings
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import BayesianRidge
 from sklearn.exceptions import ConvergenceWarning
 
 
@@ -70,11 +70,12 @@ print ('Our feature matrix has the following dimensions:',
 
 # 4.1 Fit a Cluster Expansion:
 
-TRIALS = 10
+TRIALS = 100
 TEST_SIZE = 0.20
 PROPERTY = 'energy'
 
 # set up Weights And Biases
+
 # (silence wandb terminal outputs)
 import os
 os.environ["WANDB_SILENT"] = "true"
@@ -86,75 +87,46 @@ wandb.init(project='cpsc440 ML for cluster expansion', entity="cpsc440-ml-cluste
     "species" : species,
     "cluster_info" : cutoffs,
     "property" : PROPERTY,
-    "model" : "Lasso"})
+    "model" : "BLR"})
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-    all_rmse = []
-    for alpha in np.logspace(-5, -3):
-        rmse_list = []
-        for trial in range(TRIALS):
-            X_train, X_test, y_train, y_test = train_test_split(
-                wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
-                test_size=TEST_SIZE
-            )
-            # We are using linear regression with LASSO = l1 regularization 
-            model = Lasso(alpha=alpha, fit_intercept=True)
-            # remove the constant correlation since we are fitting
-            # the intercept
-            model.fit(X_train[:, 1:], y_train)
-            wvec = np.concatenate((np.array([model.intercept_]),
-                                   model.coef_),
-                                  axis=0)
-            y_predict = np.dot(X_test, wvec)
-            rmse = np.sqrt(mse(y_test, y_predict))
-            rmse_list.append(rmse)
+    rmse_list = []
+    for trial in range(TRIALS):
+        X_train, X_test, y_train, y_test = train_test_split(
+            wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
+            test_size=TEST_SIZE
+        )
+        # We are using bayesian linear regression (note: not a good choice bc Gaussian assumption ~ L2 reg. instead of L1)
+        model = BayesianRidge(fit_intercept=True)
+        # remove the constant correlation since we are fitting the intercept
+        model.fit(X_train[:, 1:], y_train)
+        wvec = np.concatenate((np.array([model.intercept_]),
+                                model.coef_),
+                                axis=0)
+        y_predict = np.dot(X_test, wvec)
+        rmse = np.sqrt(mse(y_test, y_predict))
+        rmse_list.append(rmse)
+        wandb.log({"mean test rmse": rmse, "alpha": model.lambda_}) # note: model.lambda is the regularization parameter. ignore the change of names
 
-        mean = np.mean(rmse_list)
-        all_rmse.append(mean)
+    mean_rmse = np.mean(rmse_list)
 
-        # log to wandb
-        wandb.log({"mean test rmse": np.mean(rmse_list), "alpha": alpha})
-        # update best mean, alpha
-        if (mean <= np.min(all_rmse)):
-            wandb.config.update({"lowest_rmse": mean, "best alpha": alpha}, allow_val_change = True)
+    # log to wandb
+    wandb.config.update({"lowest_rmse": mean_rmse, "best alpha": model.lambda_}, allow_val_change = True)
 
 wandb.finish()
 
-
 # Load plotting tools to examine how the fitting is going
-# (note: see wandb for more plots)
-
+# '''
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
-plt.scatter(np.logspace(-5,-2), all_rmse)
-plt.xlim([0, 0.0009])
-plt.axvline(x = 0.0002, ls = '--', color = 'black')
-plt.xlabel(r'Penalty hyper-parameter $\alpha$')
-plt.ylabel('Average RMSE (eV/prim) in 50 trials')
-plt.savefig(".././CPSC440-Project/figs/avg_rmse")
-
-LAMBDA = 0.0002
-X_train, X_test, y_train, y_test = train_test_split(
-    wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
-    test_size=TEST_SIZE
-)
-
-model = Lasso(alpha=LAMBDA, fit_intercept=True)
-model.fit(X_train[:, 1:], y_train)
 
 wvec = np.concatenate(
     (np.array([model.intercept_]), model.coef_),
     axis=0
 )
 
-print(model.coef_)
-print(model.intercept_)
-print(wvec)
-
-# '''
 y_predict = np.dot(X_test, wvec)
 y_train_predict = np.dot(X_train, wvec)
 print(f'Out-of-sample RMSE is: {np.sqrt(mse(y_test, y_predict))} eV/prim')
@@ -168,8 +140,6 @@ plt.stem(range(len(wvec) - first_pair), wvec[first_pair:],
          linefmt='-', markerfmt=' ')#, basefmt=' ')
 plt.xlabel('Coefficient index (i in $w_i$)')
 plt.ylabel('Magnitude |$w_i$| eV/prim')
-plt.savefig(".././CPSC440-Project/figs/selected_energies")
-# plt.show()
 
 
 # 4.2 Generate the Cluster Expansion Object: 
@@ -190,4 +160,5 @@ print(f"Structure with composition {structure.composition} has predicted energy 
 
 
 # We have built the cluster expansion: Now let’s run canonical MC on Mn0.6Ni0.4As 
+
 # '''
