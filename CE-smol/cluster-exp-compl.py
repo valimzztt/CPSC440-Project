@@ -21,7 +21,6 @@ from sklearn.exceptions import ConvergenceWarning
 
 
 import wandb
-wandb.login()
 from wandb.sklearn import plot_precision_recall, plot_feature_importances
 from wandb.sklearn import plot_class_proportions, plot_learning_curve, plot_roc
 
@@ -75,8 +74,15 @@ TRIALS = 10
 TEST_SIZE = 0.20
 PROPERTY = 'energy'
 
+# set up Weights And Biases
+
+# (silence wandb terminal outputs)
+import os
+os.environ["WANDB_SILENT"] = "true"
+
 # (initialize wandb project and add hyperparameters)
 # NOTE: wandb API key: 966b532ea49a07fa69b9a1e34f47bc02865ea9ff
+wandb.login()
 wandb.init(project='ML for cluster expansion', config = {
     "species" : species,
     "cluster_info" : cutoffs,
@@ -105,24 +111,14 @@ with warnings.catch_warnings():
             rmse = np.sqrt(mse(y_test, y_predict))
             rmse_list.append(rmse)
 
-            # log to wandb
-            wandb.config.update({"test_size" : TEST_SIZE,
-                                "train_len" : len(X_train),
-                                "test_len" : len(X_test),
-                                })
-            wandb.log({f"rmse {alpha}" : rmse, f"y_predict {alpha}": y_predict, f"y_true {alpha}": y_test, "trial" : trial, "alpha" : alpha})
-           
-            
-            
-            # log additional visualisations to wandb
-            # plot_class_proportions(y_train, y_test)
-            # plot_learning_curve(model, X_train, y_train)
-            # # plot_roc(y_test, y_probas)
-            # # plot_precision_recall(y_test, y_probas)
-            # plot_feature_importances(model)
-        wandb.log({"test rmse": rmse_list})
-        
-        all_rmse.append(np.mean(rmse_list))
+        mean = np.mean(rmse_list)
+        all_rmse.append(mean)
+
+        # log to wandb
+        wandb.log({"mean test rmse": np.mean(rmse_list), "alpha": alpha})
+        # update best mean, alpha
+        if (mean <= np.min(all_rmse)):
+            wandb.config.update({"lowest_rmse": mean, "best alpha": alpha}, allow_val_change = True)
 
 wandb.finish()
 
