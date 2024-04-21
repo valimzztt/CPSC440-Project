@@ -36,7 +36,7 @@ subspace = ClusterSubspace.from_cutoffs(prim, cutoffs=cutoffs)
 
 
 # 3. TRAINING SET: The json file contains the structures with their corresponding ground-state energies 
-energies_file = os.path.join(directory,"comp-struct-energy.json" )
+energies_file = os.path.join(directory,"MnNiAs-initstruct-energy-new.json" )
 entries = loadfn(energies_file)
 
 # TRAINING SET: The Wrangler object will contain the training structures with their corresponding ground-state energies 
