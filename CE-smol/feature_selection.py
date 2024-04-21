@@ -1,9 +1,12 @@
+from sklearn.feature_selection import VarianceThreshold
+import numpy as np
 from monty.serialization import loadfn
 from smol.cofe import StructureWrangler
-from monty.serialization import loadfn
+from monty.serialization import loadfn, dumpfn
 from smol.cofe import ClusterSubspace, StructureWrangler, ClusterExpansion, RegressionData
 import os 
 from pymatgen.core import Lattice, Structure
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 from monty.serialization import loadfn
 from ase.io import read
 from smol.cofe import ClusterSubspace
@@ -46,7 +49,7 @@ for entry in entries:
 # 4. MACHINE LEARNING STEP: All training examples are in the wrangler object
 #   a) wrangler.feature_matrix contains the feature matrix of training examples: dim(wrangler.feature_matrix)=clusters we are using to describe energy 
 #   b) wrangler.get_property_vector("energy") is a vector containing the target property = energy (in eV)
-    
+
 from sklearn.linear_model import LinearRegression
 from smol.cofe import RegressionData, ClusterExpansion
 from random import choice
@@ -62,3 +65,8 @@ reg_data = RegressionData.from_sklearn(
 )
 expansion = ClusterExpansion(subspace, coefficients=reg.coef_, regression_data=reg_data)
 print(expansion)
+from sklearn.datasets import load_iris
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_classif
+X_new = SelectKBest(f_classif, k=10).fit_transform(wrangler.feature_matrix,  wrangler.get_property_vector("energy"))
+print(X_new.shape)

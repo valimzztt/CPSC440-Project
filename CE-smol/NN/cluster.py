@@ -1,3 +1,4 @@
+import tensorflow as tf
 from monty.serialization import loadfn
 from smol.cofe import StructureWrangler
 from monty.serialization import loadfn
@@ -9,12 +10,11 @@ from ase.io import read
 from smol.cofe import ClusterSubspace
 
 """
-    Scripts that demonstrate a basic CLUSTER EXPANSION using SMOL via Linear Regression 
+    Scripts that demonstrate a basic CLUSTER EXPANSION using SMOL and using a NN
 """
 
 cwd = os.getcwd()
 directory = os.path.join(cwd, "CE-smol")
-
 
 # 1. STRUCTURE: first create the primitive lattice: use fractional occupancies to have a disordered primitive cell
 species = [{'Mn': 0.60, 'Ni': 0.4},{'As':1.0}]
@@ -24,7 +24,6 @@ supercell = prim *(8,8,8)
 # 1. STRUCTURE: We read the MnNiAs supercell from a cif file to get the structure of interest 
 atoms = read("MnNiAs.cif", format="cif")
 
-
 # 2. CLUSTER SUBSPACE: Specify cluster subspace information: create a cluster subspace including pair, triplet and quadruplet clusters up to given cluster diameter cutoffs.
 # The keys are the number of atoms in a cluster (pair, triplet, quadruplet) and the values are the maximum diameters of the given n-body cluster (in Angstrom = 10^-10 m)
 
@@ -33,7 +32,7 @@ subspace = ClusterSubspace.from_cutoffs(prim, cutoffs=cutoffs)
 
 
 # 3. TRAINING SET: The json file contains the structures with their corresponding ground-state energies 
-energies_file = os.path.join(directory,"comp-struct-energy.json" )
+energies_file = os.path.join(directory,"TrainingSet/MnNiAs-initstruct-energy-new.json" )
 entries = loadfn(energies_file)
 
 # TRAINING SET: The Wrangler object will contain the training structures with their corresponding ground-state energies 
@@ -47,18 +46,33 @@ for entry in entries:
 #   a) wrangler.feature_matrix contains the feature matrix of training examples: dim(wrangler.feature_matrix)=clusters we are using to describe energy 
 #   b) wrangler.get_property_vector("energy") is a vector containing the target property = energy (in eV)
     
-from sklearn.linear_model import LinearRegression
-from smol.cofe import RegressionData, ClusterExpansion
-from random import choice
-reg = LinearRegression(fit_intercept=False)
-reg.fit(wrangler.feature_matrix, wrangler.get_property_vector("energy"))
-print(wrangler.feature_matrix.shape)
-from smol.cofe import ClusterExpansion, RegressionData
+# We are using a Neural Network 
+print("TensorFlow version:", tf.__version__)
+X_train =  wrangler.feature_matrix
+y =  wrangler.get_property_vector("energy")
+input_shape = X_train.shape
+input_dim = X_train.shape[1]
+print(input_dim )
+print(X_train.shape[0])
+model = tf.keras.models.Sequential([
+    # Input layer explicitly defining the input shape:
+    tf.keras.layers.Dense(128, activation='relu', input_shape=(input_dim,)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(64, activation='relu'),
+   tf.keras.layers.Dense(1)  # Assuming you want a single output neuron for regression
+])
 
-reg_data = RegressionData.from_sklearn(
-    estimator=reg,
-    feature_matrix=wrangler.feature_matrix,
-    property_vector=wrangler.get_property_vector("energy"),
-)
-expansion = ClusterExpansion(subspace, coefficients=reg.coef_, regression_data=reg_data)
-print(expansion)
+predictions = model(X_train[:1]).numpy()
+print(predictions)
+    
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+print(model.summary())
+history = model.fit(X_train, y, epochs=50, batch_size=32, validation_split=0.2)
+
+# To save the model
+model.save('cluster_exp_model.h5')
+
+# To load the model
+from keras.models import load_model
+loaded_model = load_model('cluster_exp_model.h5')
