@@ -55,24 +55,20 @@ input_dim = X_train.shape[1]
 print(input_dim )
 print(X_train.shape[0])
 model = tf.keras.models.Sequential([
-    # Input layer explicitly defining the input shape:
     tf.keras.layers.Dense(128, activation='relu', input_shape=(input_dim,)),
     tf.keras.layers.Dropout(0.2),
     tf.keras.layers.Dense(64, activation='relu'),
-   tf.keras.layers.Dense(1)  # Assuming you want a single output neuron for regression
+   tf.keras.layers.Dense(1) 
 ])
 
 predictions = model(X_train[:1]).numpy()
 print(predictions)
     
-# Compile the model
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 print(model.summary())
 history = model.fit(X_train, y, epochs=50, batch_size=32, validation_split=0.2)
 
-# To save the model
 model.save('cluster_exp_model.h5')
 
-# To load the model
 from keras.models import load_model
 loaded_model = load_model('cluster_exp_model.h5')
