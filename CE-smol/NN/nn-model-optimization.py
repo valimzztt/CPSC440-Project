@@ -40,7 +40,7 @@ subspace = ClusterSubspace.from_cutoffs(prim, cutoffs=cutoffs)
 
 
 # 3. TRAINING SET: The json file contains the structures with their corresponding ground-state energies 
-energies_file = os.path.join(directory,"TrainingSet/MnNiAs-initstruct-energy-new.json" )
+energies_file = os.path.join(directory,"TrainingSet/MnNiAs-initstruct-energy-all.json" )
 entries = loadfn(energies_file)
 
 # TRAINING SET: The Wrangler object will contain the training structures with their corresponding ground-state energies 
@@ -77,6 +77,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
     X =  wrangler.feature_matrix
+    print(X.shape[0])
     y =  wrangler.get_property_vector("energy")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -92,8 +93,8 @@ with warnings.catch_warnings():
         # Adjusting the number of units and adding dropout and batch normalization
         for _ in range(layers):
             model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-            #model.add(tf.keras.layers.BatchNormalization())
-            # model.add(tf.keras.layers.Dropout(0.5))
+            model.add(tf.keras.layers.BatchNormalization())
+            model.add(tf.keras.layers.Dropout(0.5))
 
         model.add(tf.keras.layers.Dense(units=1, activation='linear'))
 
