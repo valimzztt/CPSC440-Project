@@ -109,19 +109,17 @@ r2_scores.append((r2_train, r2_test))
 
 
 plt.figure(figsize=(10, 8)) 
-plt.scatter(y_test, y_test_pred)
-plt.xlabel('DFT Energy (eV)', fontsize=20)
-plt.ylabel('CE Predicted Energy (eV)', fontsize=20)
-plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement") # Line of perfect agreement
-plt.title(f'Lasso',  fontsize=25)
-plt.text(0.05, 0.95, f'Train R^2: {r2_train:.3f}\nTest R^2: {r2_test:.3f}', 
-         transform=plt.gca().transAxes, 
-         fontsize=20, verticalalignment='top', bbox=dict(boxstyle='round,pad=0.5', alpha=0.1))
-
+plt.scatter(y_test, y_test_pred, label='Predictions', s=100)  # Increase scatter point size with `s=100`)
+plt.xlabel('DFT Energy (eV)', fontsize=24)
+plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
+plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
+plt.title(f'Elastic Net (via GA)',  fontsize=25)
+plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.legend(loc='upper right')
 plt.savefig(".././CPSC440-Project/figs/GeneticAlgorithmElasticNet766.png")
 
-""" # 4.2 Generate the Cluster Expansion Object: 
+# 4.2 Generate the Cluster Expansion Object: 
 from smol.cofe import RegressionData, ClusterExpansion
 from random import choice
 
@@ -142,8 +140,8 @@ print(expansion)
 
 from smol.io import save_work
 
-file_path = os.path.join(cwd, 'CE-smol/Regularization/fitted-ce/elasticnet.mson')
+file_path = os.path.join(cwd, 'CE-smol/Regularization/fitted-ce/elasticnet_GeneticAlgorithm.mson')
 # we can save the subspace as well, but since both the wrangler
 # and the expansion have it, there is no need to do so.
 save_work(file_path, wrangler, expansion)
- """
+

@@ -21,9 +21,9 @@ prim = Structure.from_spacegroup(194, my_lattice, species, coords=[[0, 0, 0], [0
 
 # Define a range of cutoffs to explore
 cutoff_ranges = {
-    2: [5, 6, 7,8],
+    2: [7],
     3: [5, 6, 7],
-    4: [0,1,2,3,4, 5, 6,7]
+    4: [0,2,4, 6]
 }
 
 # Load training data

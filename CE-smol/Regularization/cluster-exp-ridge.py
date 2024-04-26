@@ -142,12 +142,9 @@ wvec = np.concatenate(
 
 y_train_pred = model.predict(X_train[:, 1:])
 y_test_pred = model.predict(X_test[:, 1:])
-print(f'Out-of-sample RMSE is: {np.sqrt(mse(y_test, y_predict))} eV/prim')
+print(f'Out-of-sample RMSE is: {np.sqrt(mse(y_test,y_test_pred ))} eV/prim')
 print(f'In-sample RMSE is: {np.sqrt(mse(y_train, y_train_pred ))} eV/prim')
 print(f'Number of Features > 1E-5: {sum(np.abs(wvec) > 1E-5)}/{len(wvec)}')
-
-
-
 
 r2_scores = []
 r2_train = r2_score(y_train, y_train_pred)
@@ -156,16 +153,14 @@ r2_scores.append((r2_train, r2_test))
 
 
 plt.figure(figsize=(10, 8)) 
-plt.scatter(y_test, y_test_pred)
-plt.xlabel('DFT Energy (eV)', fontsize=20)
-plt.ylabel('CE Predicted Energy (eV)', fontsize=20)
-plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement") # Line of perfect agreement
-plt.title(f'Ridge',  fontsize=30)
-plt.text(0.05, 0.95, f'Train R^2: {r2_train:.3f}\nTest R^2: {r2_test:.3f}', 
-         transform=plt.gca().transAxes, 
-         fontsize=20, verticalalignment='top', bbox=dict(boxstyle='round,pad=0.5', alpha=0.1))
-
-plt.legend(loc='upper right')
+plt.scatter(y_test, y_test_pred, label='Predictions', s=100)  # Increase scatter point size with `s=100`)
+plt.xlabel('DFT Energy (eV)', fontsize=24)
+plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
+plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
+plt.title(f'Ridge',  fontsize=25)
+plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.legend(loc='lower right')
 plt.savefig(".././CPSC440-Project/figs/Ridge766.png")
 
 # 4.2 Generate the Cluster Expansion Object: 
