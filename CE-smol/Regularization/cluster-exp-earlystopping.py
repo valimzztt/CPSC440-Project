@@ -92,6 +92,7 @@ with warnings.catch_warnings():
         print(rmse)
         # Log the RMSE to Weights & Biases
         wandb.log({"Trial RMSE": rmse})
+        
 
 
 wandb.finish()

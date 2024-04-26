@@ -78,7 +78,8 @@ wandb.init(project='cpsc440 ML for cluster expansion', entity="cpsc440-ml-cluste
     "species" : species,
     "cluster_info" : cutoffs,
     "property" : PROPERTY,
-    "model" : "Elastic Net"})
+    "model" : "Elastic Net",
+    "energy file" : energies_file})
 
 alphas = np.logspace(-5, -3, 10)
 l1_ratios = np.linspace(0.1, 0.9, 9)
