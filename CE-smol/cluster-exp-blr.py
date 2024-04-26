@@ -25,7 +25,7 @@ from wandb.sklearn import plot_precision_recall, plot_feature_importances
 from wandb.sklearn import plot_class_proportions, plot_learning_curve, plot_roc
 
 """
-    Scripts that demonstrate a more involved CLUSTER EXPANSION using SMOL
+    Scripts that demonstrate a more involved CLUSTER EXPANSION using SMOL and Bayesian Linear Regression
 """
 
 cwd = os.getcwd()
@@ -48,7 +48,7 @@ cutoffs = {2: 7, 3: 6, 4: 6}   # This is equal to CLEASE'S max_cluster_diameter 
 subspace = ClusterSubspace.from_cutoffs(prim, cutoffs=cutoffs)
 
 # 3. TRAINING SET: The json file contains the structures with their corresponding ground-state energies 
-energies_file = os.path.join(directory,"MnNiAs-initstruct-energy-new.json" )
+energies_file = os.path.join(directory,"TrainingSet\MnNiAs-initstruct-energy-all.json" )
 entries = loadfn(energies_file)
 
 # TRAINING SET: The Wrangler object will contain the training structures with their corresponding ground-state energies 
@@ -87,7 +87,8 @@ wandb.init(project='cpsc440 ML for cluster expansion', entity="cpsc440-ml-cluste
     "species" : species,
     "cluster_info" : cutoffs,
     "property" : PROPERTY,
-    "model" : "BLR"})
+    "model" : "BLR",
+    "energy file" : energies_file})
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)

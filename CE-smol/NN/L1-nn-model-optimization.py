@@ -15,6 +15,7 @@ from ase.io import read
 from smol.cofe import ClusterSubspace
 from sklearn.exceptions import ConvergenceWarning
 """
+    (same as nn-model-optimization but with L1 reg)
     Scripts that demonstrates CLUSTER EXPANSION using SMOL and using a NN where we are testing NN with different layers and (hyper-parameter):  the goal is to get a 
     R^2 value that is between 0 and 1 (ideally 1)
 """
@@ -70,7 +71,7 @@ wandb.init(project='cpsc440 ML for cluster expansion', entity="cpsc440-ml-cluste
     "species" : species,
     "cluster_info" : cutoffs,
     "property" : PROPERTY,
-    "model" : "Neural Net"})
+    "model" : "L1 Neural Net"})
 
 
 with warnings.catch_warnings():
@@ -92,7 +93,7 @@ with warnings.catch_warnings():
 
         # Adjusting the number of units and adding dropout and batch normalization
         for _ in range(layers):
-            model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+            model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=tf.keras.regularizers.L1(l1 = 0.01)))
             model.add(tf.keras.layers.BatchNormalization())
             model.add(tf.keras.layers.Dropout(0.5))
 
