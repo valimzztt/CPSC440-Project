@@ -69,4 +69,4 @@ for cutoff_2 in cutoff_ranges[2]:
 
 print(f'Best RMSE: {best_rmse}, Best diameters: {best_diameters}')
 ga_model.export('best_pipeline.py')
-joblib.dump(best_model.fitted_pipeline_, 'cluster_exp_ga_model.pkl')
+joblib.dump(best_model.fitted_pipeline_, 'cluster_exp_ga_model_diameters.pkl')
