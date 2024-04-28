@@ -69,7 +69,7 @@ for cutoffs in cutoff_combinations:
     # Define and compile the neural network model
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(128, activation='relu', input_shape=(X_train.shape[1],)),
-        tf.keras.layers.Dropout(0.2),
+        # tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Dense(64, activation='relu'),
         tf.keras.layers.Dense(1)  # Output layer for regression
     ])

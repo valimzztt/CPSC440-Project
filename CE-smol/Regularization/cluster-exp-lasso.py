@@ -117,12 +117,15 @@ wandb.finish()
 
 import matplotlib.pyplot as plt
 plt.figure(figsize=(10, 8)) 
-plt.scatter(np.logspace(-5,-2), all_rmse)
+plt.scatter(np.logspace(-5,-2), all_rmse, s=100)
 plt.xlim([0, 0.0009])
-plt.axvline(x = 0.0002, ls = '--', color = 'black')
-plt.xlabel(r'Penalty hyper-parameter $\alpha$')
-plt.ylabel('Average RMSE (eV/prim) in 50 trials')
-plt.savefig(".././CPSC440-Project/figs/avg_rmse")
+plt.title(f'Lasso',  fontsize=25)
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+plt.axvline(x = 0.0003, ls = '--', color = 'red')
+plt.xlabel(r'Penalty hyper-parameter $\alpha$',fontsize=20)
+plt.ylabel('Average RMSE (eV/prim) in 50 trials', fontsize=20)
+plt.savefig(".././CPSC440-Project/figs/LassoHyperparam.png")
 
 LAMBDA = 0.0002
 X_train, X_test, y_train, y_test = train_test_split(

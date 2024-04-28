@@ -12,7 +12,7 @@ from smol.cofe import ClusterSubspace
 """
     Scripts that demonstrate a basic CLUSTER EXPANSION using SMOL and using a NN
 """
-
+import matplotlib.pyplot as plt
 cwd = os.getcwd()
 directory = os.path.join(cwd, "CE-smol")
 
@@ -27,7 +27,7 @@ atoms = read("MnNiAs.cif", format="cif")
 # 2. CLUSTER SUBSPACE: Specify cluster subspace information: create a cluster subspace including pair, triplet and quadruplet clusters up to given cluster diameter cutoffs.
 # The keys are the number of atoms in a cluster (pair, triplet, quadruplet) and the values are the maximum diameters of the given n-body cluster (in Angstrom = 10^-10 m)
 
-cutoffs = {2: 7, 3: 6, 4: 0}   # This is equal to CLEASE'S max_cluster_diameter =(7,6,6)  
+cutoffs = {2: 7, 3: 6, 4: 6}   # This is equal to CLEASE'S max_cluster_diameter =(7,6,6)  
 subspace = ClusterSubspace.from_cutoffs(prim, cutoffs=cutoffs)
 
 
@@ -72,3 +72,29 @@ model.save('cluster_exp_model.h5')
 
 from keras.models import load_model
 loaded_model = load_model('cluster_exp_model.h5')
+
+# Evaluate the model
+y_pred = model.predict(X_test)
+print(f'R^2 Score: {r2_score(y_test, y_pred)}')
+
+# Save the best model
+model.save(os.path.join(cwd, 'best_nn_model.h5'))
+y_train_pred =model.predict(X_train)
+y_test_pred = model.predict(X_test)
+
+
+r2_scores = []
+r2_train = r2_score(y_train, y_train_pred)
+r2_test = r2_score(y_test, y_test_pred)
+r2_scores.append((r2_train, r2_test))
+
+plt.figure(figsize=(10, 8)) 
+plt.scatter(y_test, y_test_pred, label='Predictions', s=100)  # Increase scatter point size with `s=100`)
+plt.xlabel('DFT Energy (eV)', fontsize=24)
+plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
+plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
+plt.title(f'Lasso',  fontsize=25)
+plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.legend(loc='lower right')
+plt.savefig(".././CPSC440-Project/figs/BestNN766.png")
