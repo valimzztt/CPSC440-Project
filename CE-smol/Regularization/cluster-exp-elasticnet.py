@@ -111,7 +111,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 plt.figure(figsize=(10, 8))
-ax = sns.heatmap(results, xticklabels=np.round(l1_ratios, 2), yticklabels=np.round(np.log10(alphas), 3), annot=True, fmt=".2f")
+ax = sns.heatmap(results, xticklabels=np.round(l1_ratios, 2), yticklabels=np.round(np.log10(alphas), 3), annot=True, fmt=".3f")
 ax.set_title("Heatmap of RMSE for Different Alpha and L1 Ratios")
 ax.set_xlabel("L1 Ratio")
 ax.set_ylabel("Log10(Alpha)")
@@ -152,8 +152,8 @@ plt.xlabel('DFT Energy (eV)', fontsize=24)
 plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
 plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
 plt.title(f'Elastic Net',  fontsize=25)
-plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
-plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.9, f'Train $R^2$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.legend(loc='lower right')
 plt.savefig(".././CPSC440-Project/figs/ElasticNet766.png")
 

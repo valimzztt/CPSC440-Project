@@ -78,7 +78,7 @@ wandb.init(project='cpsc440 ML for cluster expansion', entity="cpsc440-ml-cluste
     "species" : species,
     "cluster_info" : cutoffs,
     "property" : PROPERTY,
-    "model" : "Lasso"})
+    "model" : "Lasso_fresh"})
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
@@ -91,10 +91,9 @@ with warnings.catch_warnings():
                 wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
                 test_size=TEST_SIZE
             )
-            # We are using linear regression with LASSO = l1 regularization 
+
             model = Lasso(alpha=alpha, fit_intercept=True)
-            # remove the constant correlation since we are fitting
-            # the intercept
+            # remove the constant correlation since we are fitting the intercept
             model.fit(X_train[:, 1:], y_train)
             wvec = np.concatenate((np.array([model.intercept_]),
                                    model.coef_),
@@ -114,23 +113,24 @@ with warnings.catch_warnings():
 
 wandb.finish()
 
-
 import matplotlib.pyplot as plt
+
+ALPHA = 0.0002
+
 plt.figure(figsize=(10, 8)) 
 plt.scatter(np.logspace(-5,-2), all_rmse)
 plt.xlim([0, 0.0009])
-plt.axvline(x = 0.0002, ls = '--', color = 'black')
+plt.axvline(x = ALPHA, ls = '--', color = 'black')
 plt.xlabel(r'Penalty hyper-parameter $\alpha$')
 plt.ylabel('Average RMSE (eV/prim) in 50 trials')
 plt.savefig(".././CPSC440-Project/figs/avg_rmse")
 
-LAMBDA = 0.0002
 X_train, X_test, y_train, y_test = train_test_split(
     wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
     test_size=TEST_SIZE
 )
 
-model = Lasso(alpha=LAMBDA, fit_intercept=True)
+model = Lasso(alpha=ALPHA, fit_intercept=True)
 
 model.fit(X_train[:, 1:], y_train)
 
@@ -159,8 +159,8 @@ plt.xlabel('DFT Energy (eV)', fontsize=24)
 plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
 plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
 plt.title(f'Lasso',  fontsize=25)
-plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
-plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.9, f'Train $R^2$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.legend(loc='lower right')
 plt.savefig(".././CPSC440-Project/figs/Lasso766.png")
 

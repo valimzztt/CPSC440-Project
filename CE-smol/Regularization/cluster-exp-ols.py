@@ -17,7 +17,7 @@ from sklearn.metrics import r2_score
 
 
 """
-    Scripts that demonstrate CLUSTER EXPANSION using Lasso regression
+    Scripts that demonstrate CLUSTER EXPANSION using unregularized linear regression
 """
 
 cwd = os.getcwd()
@@ -63,8 +63,6 @@ TRIALS = 10
 TEST_SIZE = 0.20
 PROPERTY = 'energy'
 
-# set up Weights And Biases
-# (silence wandb terminal outputs)
 import os
 import matplotlib.pyplot as plt
 
@@ -102,8 +100,8 @@ plt.xlabel('DFT Energy (eV)', fontsize=24)
 plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
 plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
 plt.title(f'OLS',  fontsize=25)
-plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
-plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.9, f'Train $R^2$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.legend(loc='lower right')
 plt.savefig(".././CPSC440-Project/figs/OLS766.png")
 

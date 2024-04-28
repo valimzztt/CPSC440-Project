@@ -25,7 +25,7 @@ from smol.io import load_work
 import wandb
 
 """
-    Scripts that demonstrate CLUSTER EXPANSION using Lasso regression
+    Scripts that demonstrate CLUSTER EXPANSION using SGDRegressor
 """
 
 cwd = os.getcwd()
@@ -34,7 +34,7 @@ directory = os.path.join(cwd, "CE-smol")
 
 # 1. STRUCTURE: let's just load the dataset saved to file: c
 cwd = os.getcwd()
-file_path = os.path.join(cwd, 'CE-smol/Regularization/fitted-ce/lasso766.mson')
+file_path = os.path.join(cwd, 'CE-smol/Regularization/fitted-ce/SGDreg.mson')
 work = load_work(file_path)
 PROPERTY = "energy"
 for name, obj in work.items():

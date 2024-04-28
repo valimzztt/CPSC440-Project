@@ -91,10 +91,8 @@ with warnings.catch_warnings():
                 wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
                 test_size=TEST_SIZE
             )
-            # We are using linear regression with LASSO = l1 regularization 
             model = Ridge(alpha=alpha, fit_intercept=True)
-            # remove the constant correlation since we are fitting
-            # the intercept
+            # remove the constant correlation since we are fitting the intercept
             model.fit(X_train[:, 1:], y_train)
             wvec = np.concatenate((np.array([model.intercept_]),
                                    model.coef_),
@@ -118,20 +116,22 @@ wandb.finish()
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+ALPHA = 0.00047 # extracted from avg tst rmse in wandb
+
 plt.scatter(np.logspace(-5,-2), all_rmse)
 plt.xlim([0, 0.0009])
-plt.axvline(x = 0.0002, ls = '--', color = 'black')
+plt.axvline(x = ALPHA, ls = '--', color = 'black')
 plt.xlabel(r'Penalty hyper-parameter $\alpha$')
 plt.ylabel('Average RMSE (eV/prim) in 50 trials')
 plt.savefig(".././CPSC440-Project/figs/avg_rmse")
 
-LAMBDA = 0.0002
+
 X_train, X_test, y_train, y_test = train_test_split(
     wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),
     test_size=TEST_SIZE
 )
 
-model = Ridge(alpha=LAMBDA, fit_intercept=True)
+model = Ridge(alpha=ALPHA, fit_intercept=True)
 
 model.fit(X_train[:, 1:], y_train)
 
@@ -156,10 +156,10 @@ plt.figure(figsize=(10, 8))
 plt.scatter(y_test, y_test_pred, label='Predictions', s=100)  # Increase scatter point size with `s=100`)
 plt.xlabel('DFT Energy (eV)', fontsize=24)
 plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
-plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
+plt.plot(y_test, y_test, markerfacecolor='k--', label="Line of perfect agreement") # Line of perfect agreement
 plt.title(f'Ridge',  fontsize=25)
-plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
-plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.9, f'Train $R^2$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
+plt.text(0.05, 0.85, f'Test $R^2$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.legend(loc='lower right')
 plt.savefig(".././CPSC440-Project/figs/Ridge766.png")
 
