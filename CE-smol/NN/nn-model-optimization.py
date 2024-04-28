@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from monty.serialization import loadfn
@@ -9,6 +10,7 @@ from monty.serialization import loadfn
 import warnings
 from smol.cofe import ClusterSubspace, StructureWrangler, ClusterExpansion, RegressionData
 import os 
+from sklearn.metrics import mean_squared_error, r2_score
 from pymatgen.core import Lattice, Structure
 from monty.serialization import loadfn
 from ase.io import read
@@ -62,82 +64,81 @@ TRIALS = 10
 TEST_SIZE = 0.20
 PROPERTY = 'energy'
 
-# (initialize wandb project and add hyperparameters)
-# NOTE: wandb API key: 966b532ea49a07fa69b9a1e34f47bc02865ea9ff
 
-wandb.login()
-wandb.init(project='cpsc440 ML for cluster expansion', entity="cpsc440-ml-cluster-expansion", config = {
-    "species" : species,
-    "cluster_info" : cutoffs,
-    "property" : PROPERTY,
-    "model" : "Neural Net"})
+X =  wrangler.feature_matrix
+print(X.shape[0])
+y =  wrangler.get_property_vector("energy")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+r2_scores = []
 
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=ConvergenceWarning)
+# Range of layers to train separate models
+layer_configs = [10, 20, 30]
+mean_rmse = []
+cv_scores = []
 
-    X =  wrangler.feature_matrix
-    print(X.shape[0])
-    y =  wrangler.get_property_vector("energy")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+for layers in layer_configs:
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.InputLayer(input_shape=(X.shape[1],)))
 
+    # Adjusting the number of units and adding dropout and batch normalization
+    for _ in range(layers):
+        model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        model.add(tf.keras.layers.BatchNormalization())
+        #  model.add(tf.keras.layers.Dropout(0.5))
+
+    model.add(tf.keras.layers.Dense(units=1, activation='linear'))
+    # Let's try a learning rate scheduler
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=0.001,
+        decay_steps=10000,
+        decay_rate=0.9)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+    #optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)       
+    model.compile(optimizer=optimizer, loss='mean_squared_error')
+
+    # Early stopping
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    # Time to fit 
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_absolute_error'])
+
+    # Train the model
+    history = model.fit(X_train, y_train, epochs=300, batch_size=32, validation_split=0.2)
+
+    # Evaluate the model on the test set
+    test_loss, test_mae = model.evaluate(X_test, y_test)
+    print(f"Test Loss: {test_loss}, Test MAE: {test_mae}")
+    
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    
+
+    r2_train = r2_score(y_train, y_train_pred)
+    r2_test = r2_score(y_test, y_test_pred)
+    r2_scores.append((r2_train, r2_test))
+    val_loss  = min(history.history['val_loss'])
+    cv_scores.append(val_loss )
+    rmse =  test_mae
+    mean_rmse.append(rmse)
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    
     r2_scores = []
+    r2_train = r2_score(y_train, y_train_pred)
+    r2_test = r2_score(y_test, y_test_pred)
+    r2_scores.append((r2_train, r2_test))
 
-    # Range of layers to train separate models
-    layer_configs = [10, 20, 30]
+    plt.figure(figsize=(10, 8)) 
+    plt.title(f'{layers} Layers', fontsize=25)
+    plt.scatter(y_test, y_test_pred, label=f'{layers} Layers', s=100)
+    plt.xlabel('DFT Energy (eV)', fontsize=24)
+    plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
+    plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
+    plt.text(0.05, 0.9, f'RMSE: {rmse:.3f} eV', transform=plt.gca().transAxes, fontsize=20)
+    plt.text(0.05, 0.85, f'Validation loss: {val_loss:.3f}', transform=plt.gca().transAxes, fontsize=20)
+    plt.legend(loc='lower right')
+    plt.savefig(f'.././CPSC440-Project/figs/NN{layers}.png')
 
-    for layers in layer_configs:
-        model = tf.keras.Sequential()
-        model.add(tf.keras.layers.InputLayer(input_shape=(X.shape[1],)))
-
-        # Adjusting the number of units and adding dropout and batch normalization
-        for _ in range(layers):
-            model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-            model.add(tf.keras.layers.BatchNormalization())
-            model.add(tf.keras.layers.Dropout(0.5))
-
-        model.add(tf.keras.layers.Dense(units=1, activation='linear'))
-
-        # Let's try a learning rate scheduler
-        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate=0.001,
-            decay_steps=10000,
-            decay_rate=0.9)
-        optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-        #optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)       
-        model.compile(optimizer=optimizer, loss='mean_squared_error')
-
-        # Early stopping
-        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-        # Time to fit! 
-        model.fit(
-            X_train, y_train, 
-            epochs=300, 
-            batch_size=32, 
-            verbose=0,
-            validation_split=0.2,
-            # callbacks=[early_stopping]
-        )
-        
-        y_train_pred = model.predict(X_train)
-        y_test_pred = model.predict(X_test)
-        
-
-        r2_train = r2_score(y_train, y_train_pred)
-        r2_test = r2_score(y_test, y_test_pred)
-        r2_scores.append((r2_train, r2_test))
-
-        plt.figure()
-        plt.scatter(y_test, y_test_pred, label=f'{layers} Layers')
-        plt.xlabel('DFT Energy (eV)')
-        plt.ylabel('CE Predicted Energy (eV)')
-        plt.plot(y_test, y_test, 'k--')  # Line of perfect agreement
-        plt.title(f'{layers} Layers Neural Network')
-        plt.legend()
-        plt.show()
-
-        wandb.log({"train r2_score": r2_train, "test r2_score": r2_test, "# layers": layers})
-wandb.finish()
 
 
 for i, scores in enumerate(r2_scores):

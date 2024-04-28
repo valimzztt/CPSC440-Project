@@ -101,11 +101,11 @@ labels = []
 LAMBDA = 10**(-3.667)
 L1_RATIO =  0.4
 cv_scorer = make_scorer(mean_squared_error, greater_is_better=False)
-
+from sklearn.model_selection import LeaveOneOut
 num_features_list = []
 rmse_list = []
 loocv_error_list = []
-loo = Leave
+loo = LeaveOneOut()
 # Calculate the scores and store results
 for cutoff_dict in cutoff_combinations:
     X, y = generate_data_for_cutoffs(cutoff_dict)
@@ -121,7 +121,10 @@ for cutoff_dict in cutoff_combinations:
     # Perform LOOCV and calculate the error
     neg_mse_scores = cross_val_score(model, X, y, cv=loo, scoring='neg_mean_squared_error')
     loocv_error = -neg_mse_scores.mean()  # Convert to positive MSE score
-    
+    print("Number of features: ")
+    print(num_features)
+    print("cutoff_dictionary: ")
+    print(cutoff_dict)
     # Record the results
     num_features_list.append(num_features)
     rmse_list.append(rmse)

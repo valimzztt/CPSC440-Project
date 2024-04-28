@@ -112,19 +112,19 @@ with warnings.catch_warnings():
 
 wandb.finish()
 
-
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 ALPHA = 0.00047 # extracted from avg tst rmse in wandb
 
 plt.scatter(np.logspace(-5,-2), all_rmse)
 plt.xlim([0, 0.0009])
+plt.title(f'Ridge',  fontsize=25)
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
 plt.axvline(x = ALPHA, ls = '--', color = 'black')
-plt.xlabel(r'Penalty hyper-parameter $\alpha$')
-plt.ylabel('Average RMSE (eV/prim) in 50 trials')
-plt.savefig(".././CPSC440-Project/figs/avg_rmse")
-
+plt.xlabel(r'Penalty hyper-parameter $\alpha$',fontsize=20)
+plt.ylabel('Average RMSE (eV/prim) in 50 trials', fontsize=20)
+plt.savefig(".././CPSC440-Project/figs/RidgeHyperparam.png")
 
 X_train, X_test, y_train, y_test = train_test_split(
     wrangler.feature_matrix, wrangler.get_property_vector(key=PROPERTY),

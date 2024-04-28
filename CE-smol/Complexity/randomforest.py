@@ -83,7 +83,7 @@ plt.scatter(y_test, y_test_pred, label='Predictions', s=100)  # Increase scatter
 plt.xlabel('DFT Energy (eV)', fontsize=24)
 plt.ylabel('CE Predicted Energy (eV)', fontsize=24)
 plt.plot(y_test, y_test, 'k--', label="Line of perfect agreement", color="red") # Line of perfect agreement
-plt.title(f'OLS',  fontsize=25)
+plt.title(f'Random Forest',  fontsize=25)
 plt.text(0.05, 0.9, f'Train $R^2"$: {r2_train:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.text(0.05, 0.85, f'Test $R^2"$: {r2_test:.3f}', transform=plt.gca().transAxes, fontsize=20)
 plt.legend(loc='lower right')
